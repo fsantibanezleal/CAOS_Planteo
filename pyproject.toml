@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "planteo"
+version = "0.1.0"
+description = "A typed representation for a problem after it has been read and before it is solved: dimensions on every quantity, provenance on every element, and a record of what the narrative left open."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Felipe Santibanez-Leal", email = "fsantibanez@gmail.com" }]
+keywords = [
+    "optimization",
+    "formalization",
+    "autoformalization",
+    "operations-research",
+    "units",
+    "dimensional-analysis",
+    "modeling",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+pyomo = ["pyomo>=6.7"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.urls]
+Homepage = "https://github.com/fsantibanezleal/CAOS_Planteo"
+Source = "https://github.com/fsantibanezleal/CAOS_Planteo"
+Issues = "https://github.com/fsantibanezleal/CAOS_Planteo/issues"
+Changelog = "https://github.com/fsantibanezleal/CAOS_Planteo/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+planteo = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",
+    # UP042 wants StrEnum. These enums inherit str deliberately: their .value is what
+    # lands in the JSON document and in canonical form, and StrEnum changes str() behaviour in a
+    # way that would alter serialised output. The mixin is the contract, not an oversight.
+    "UP042",
+]
