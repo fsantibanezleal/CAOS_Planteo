@@ -257,32 +257,52 @@ def _register() -> None:
 _register()
 
 
+def _require(data: Mapping[str, object], field: str, tag: str) -> object:
+    """Read a required field, or say which one is missing and on what.
+
+    A bare ``KeyError('unit')`` in a run ledger is unreadable six months later, and this is the path
+    that parses output from a language model, where malformed nodes are the normal case rather than
+    the exception. The message has to name the node and the field.
+    """
+    if field not in data:
+        raise ValueError(
+            f"a {tag!r} node is missing its {field!r} field; got keys {sorted(data)}"
+        )
+    return data[field]
+
+
 def expression_from_json(data: Mapping[str, object]) -> Expression:
     """Rebuild an expression. Rejects an unknown tag rather than guessing."""
     tag = str(data.get("tag", ""))
     if tag not in _NODES:
-        raise ValueError(f"unknown expression node {tag!r}; the node set is closed")
+        known = ", ".join(sorted(_NODES))
+        raise ValueError(
+            f"unknown expression node {tag!r}; the node set is closed. Known nodes: {known}"
+        )
     if tag == "const":
+        # A constant without a unit is the single most common malformed node, because a dimension
+        # is the part a writer forgets. It is a rejection, not a default: silently calling it
+        # dimensionless would defeat the whole representation.
         return Constant(
-            value=float(data["value"]),  # type: ignore[arg-type]
-            unit=Dimension.from_json(data["unit"]),  # type: ignore[arg-type]
+            value=float(_require(data, "value", tag)),  # type: ignore[arg-type]
+            unit=Dimension.from_json(_require(data, "unit", tag)),  # type: ignore[arg-type]
         )
     if tag == "ref":
-        return Ref(name=str(data["name"]))
+        return Ref(name=str(_require(data, "name", tag)))
     if tag == "sum":
-        return Sum(tuple(expression_from_json(t) for t in data["terms"]))  # type: ignore[union-attr]
+        return Sum(tuple(expression_from_json(t) for t in _require(data, "terms", tag)))  # type: ignore[union-attr]
     if tag == "product":
-        return Product(tuple(expression_from_json(f) for f in data["factors"]))  # type: ignore[union-attr]
+        return Product(tuple(expression_from_json(f) for f in _require(data, "factors", tag)))  # type: ignore[union-attr]
     if tag == "power":
         return Power(
-            base=expression_from_json(data["base"]),  # type: ignore[arg-type]
-            exponent=Fraction(str(data["exponent"])),
+            base=expression_from_json(_require(data, "base", tag)),  # type: ignore[arg-type]
+            exponent=Fraction(str(_require(data, "exponent", tag))),
         )
     if tag == "bigsum":
         return BigSum(
-            index=str(data["index"]),
-            index_set=str(data["index_set"]),
-            body=expression_from_json(data["body"]),  # type: ignore[arg-type]
+            index=str(_require(data, "index", tag)),
+            index_set=str(_require(data, "index_set", tag)),
+            body=expression_from_json(_require(data, "body", tag)),  # type: ignore[arg-type]
         )
     from .relations import relation_from_json  # local import, cyclic by nature
 

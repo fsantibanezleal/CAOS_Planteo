@@ -212,6 +212,15 @@ class Objective:
         )
 
 
+def _require(data: Mapping[str, object], field: str, tag: str) -> object:
+    """Read a required field, or name the node and the field that is missing."""
+    if field not in data:
+        raise ValueError(
+            f"a {tag!r} relation is missing its {field!r} field; got keys {sorted(data)}"
+        )
+    return data[field]
+
+
 def relation_from_json(data: Mapping[str, object]) -> Relation:
     tag = str(data.get("tag", ""))
     span_data = data.get("span")
@@ -219,25 +228,28 @@ def relation_from_json(data: Mapping[str, object]) -> Relation:
     name = str(data.get("name", ""))
     if tag == "compare":
         return Compare(
-            left=expression_from_json(data["left"]),  # type: ignore[arg-type]
-            comparator=Comparator(str(data["comparator"])),
-            right=expression_from_json(data["right"]),  # type: ignore[arg-type]
+            left=expression_from_json(_require(data, "left", tag)),  # type: ignore[arg-type]
+            comparator=Comparator(str(_require(data, "comparator", tag))),
+            right=expression_from_json(_require(data, "right", tag)),  # type: ignore[arg-type]
             name=name,
             span=span,
         )
     if tag == "logical":
         return Logical(
-            connective=str(data["connective"]),
-            operands=tuple(relation_from_json(o) for o in data["operands"]),  # type: ignore[union-attr]
+            connective=str(_require(data, "connective", tag)),
+            operands=tuple(relation_from_json(o) for o in _require(data, "operands", tag)),  # type: ignore[union-attr]
             name=name,
             span=span,
         )
     if tag == "forall":
         return ForAll(
-            index=str(data["index"]),
-            index_set=str(data["index_set"]),
-            body=relation_from_json(data["body"]),  # type: ignore[arg-type]
+            index=str(_require(data, "index", tag)),
+            index_set=str(_require(data, "index_set", tag)),
+            body=relation_from_json(_require(data, "body", tag)),  # type: ignore[arg-type]
             name=name,
             span=span,
         )
-    raise ValueError(f"unknown relation node {tag!r}; the node set is closed")
+    known = "compare, logical, forall"
+    raise ValueError(
+        f"unknown relation node {tag!r}; the node set is closed. Known nodes: {known}"
+    )
