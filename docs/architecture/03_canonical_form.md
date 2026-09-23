@@ -48,7 +48,9 @@ that carry no meaning, so two documents that reduce to the same form denote the 
 
 Inequality proves **nothing**. Two genuinely equivalent models can canonicalise differently, because
 deciding equivalence in general is not something a normaliser does. `x >= 1` and `2x >= 2` are the
-same constraint and this form will not say so. Neither will it recognise a constraint that has been
+same constraint and this form will not say so. It keeps the objective's sense, so maximising `f` and
+minimising `-f` come out `NOT_PROVEN_EQUIVALENT` although they are one model. Neither will it
+recognise a constraint that has been
 substituted through an equality, or a reformulation that is equivalent by an argument rather than by
 syntax.
 

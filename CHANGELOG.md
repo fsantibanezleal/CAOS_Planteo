@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions are `X.XX.XXX` in this file, the
 git tag and any interface string, and the semver form with zeros dropped in `pyproject.toml`.
 
+## [0.01.001] - 2026-09-23
+
+A documentation release. No code changed.
+
+### Fixed
+
+- **The README claimed a MiniZinc emitter that does not exist.** It said the package "emits to Pyomo
+  and MiniZinc"; 0.01.000 emits Pyomo only, and the design document already listed MiniZinc as out
+  of scope. The claim reached the PyPI project page, which is why this is a release and not only a
+  commit.
+- The canonical-form page now names a limit it had left implicit: the form keeps the objective's
+  sense, so maximising `f` and minimising `-f` are not proven equivalent.
+
 ## [0.01.000] - 2026-09-22
 
 First release. The representation, its validator, the Pyomo emitter and canonical comparison.
