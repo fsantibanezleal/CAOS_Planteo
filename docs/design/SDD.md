@@ -167,7 +167,16 @@ R-009  WHILE a Problem is serialised and deserialised, THE round trip SHALL pres
 
 R-010  THE JSON schema version SHALL be present in every serialised document.
        Gate: tests/test_schema.py::test_version_present
+
+R-011  IF a document lacks a required field, THEN THE parser SHALL raise a message naming the element
+       that lacks it, the field, and the keys it had, and SHALL NOT raise a bare KeyError.
+       Gate: tests/test_schema.py::test_a_missing_field_names_its_element_and_the_field
 ```
+
+R-011 came from reading run ledgers. Expression nodes and relations already said what they lacked,
+but a quantity, an assumption, an open question, a span, an objective and the problem itself read
+their fields with a bare index, and four records in Enunciado's ledgers carried the string `'span'`
+as their whole diagnosis.
 
 ## 10. Convergence
 
@@ -178,7 +187,7 @@ Recorded for 0.01.000, on 2026-09-22:
 
 | Requirement | Gate | Result |
 |---|---|---|
-| R-001 to R-010 | as named above | all pass, 52 tests, no skips |
+| R-001 to R-011 | as named above | all pass, 65 tests, no skips (0.01.002) |
 | The SDD gate itself | `scripts/check_sdd.py` | passes, and catches all four negative controls: a gate naming a missing test, a gate naming a missing file, a requirement with no gate, and a human gate instead of a mechanical one |
 | R-007 specifically | HiGHS through Pyomo | solved, objective 900.0 against the analytic optimum, not skipped |
 

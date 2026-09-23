@@ -15,6 +15,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from ._fields import require
+
 
 class SpanError(ValueError):
     """Raised when a span does not agree with the narrative it points into."""
@@ -49,7 +51,7 @@ class Narrative:
     @classmethod
     def from_json(cls, data: Mapping[str, object]) -> Narrative:
         narrative = cls(
-            text=str(data["text"]),
+            text=str(require(data, "text", "a narrative")),
             source=str(data.get("source", "inline")),
             language=str(data.get("language", "en")),
         )
@@ -136,10 +138,10 @@ class Span:
 
     @classmethod
     def from_json(cls, data: Mapping[str, object]) -> Span:
-        if "inferred_reason" in data:
+        if isinstance(data, Mapping) and "inferred_reason" in data:
             return cls.inferred(str(data["inferred_reason"]))
         return cls(
-            start=int(data["start"]),  # type: ignore[arg-type]
-            end=int(data["end"]),  # type: ignore[arg-type]
-            text=str(data["text"]),
+            start=int(require(data, "start", "a span")),  # type: ignore[arg-type]
+            end=int(require(data, "end", "a span")),  # type: ignore[arg-type]
+            text=str(require(data, "text", "a span")),
         )
