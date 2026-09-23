@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions are `X.XX.XXX` in this file, the
 git tag and any interface string, and the semver form with zeros dropped in `pyproject.toml`.
 
+## [0.01.002] - 2026-09-23
+
+### Fixed
+
+- **A missing field raised a bare KeyError (R-011).** A quantity, an assumption, an open question,
+  a span, an objective, a narrative and the problem itself read their fields with a bare index, so a
+  missing one reached a run ledger as the string `'span'`, naming neither the field's owner nor the
+  keys it had. Four records in Enunciado's ledgers carry exactly that. Every one now raises
+  `ValueError("an assumption is missing its 'span' field; got keys [...]")`, worded like the
+  messages expression nodes and relations already gave. An `if` node's three fields go through the
+  same check.
+
 ## [0.01.001] - 2026-09-23
 
 A documentation release. No code changed.

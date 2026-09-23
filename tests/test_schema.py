@@ -81,3 +81,54 @@ def test_an_unresolved_question_is_surfaced_as_a_warning(blend) -> None:
     report = validate(problem)
     assert report.ok
     assert any(f.check == "open-questions" for f in report.warnings), report
+
+
+def _without(payload: dict, path: tuple, field: str) -> dict:
+    """A deep copy of the document with one field removed at a path of keys and indices."""
+    import copy
+
+    document = copy.deepcopy(payload)
+    target = document
+    for step in path:
+        target = target[step]
+    del target[field]
+    return document
+
+
+@pytest.mark.parametrize(
+    ("path", "field", "owner"),
+    [
+        ((), "narrative", "a problem"),
+        ((), "family", "a problem"),
+        (("narrative",), "text", "a narrative"),
+        (("quantities", 0), "name", "a quantity"),
+        (("quantities", 0), "role", "a quantity"),
+        (("quantities", 0), "dimension", "a quantity"),
+        (("objectives", 0), "sense", "an objective"),
+        (("objectives", 0), "expression", "an objective"),
+        (("assumptions", 0), "statement", "an assumption"),
+        (("assumptions", 0), "span", "an assumption"),
+        (("open_questions", 0), "question", "an open question"),
+        (("open_questions", 0), "span", "an open question"),
+        (("open_questions", 0, "span"), "start", "a span"),
+    ],
+)
+def test_a_missing_field_names_its_element_and_the_field(blend, path, field, owner) -> None:
+    """R-011: a missing field is reported with its owner and the keys that were there.
+
+    These used to raise a bare KeyError, and a run ledger recorded the string "'span'": the missing
+    field's name and nothing about what lacked it. A language model's output is where missing
+    fields are normal, so the message is what makes a failure diagnosable later.
+    """
+    payload = json.loads(json.dumps(blend.to_json()))
+    text = payload["narrative"]["text"]
+    phrase = text.split()[0]
+    span = {"start": 0, "end": len(phrase), "text": phrase}
+    payload["assumptions"] = [{"statement": "the pits are independent", "span": dict(span)}]
+    payload["open_questions"] = [{"question": "which pit first?", "span": dict(span)}]
+    Problem.from_json(payload)  # the complete document parses
+
+    with pytest.raises(ValueError) as caught:
+        Problem.from_json(_without(payload, path, field))
+    message = str(caught.value)
+    assert f"{owner} is missing its {field!r} field; got keys" in message, message
