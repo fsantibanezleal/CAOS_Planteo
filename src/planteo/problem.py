@@ -18,6 +18,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 
+from ._fields import require
 from .dimensions import Dimension
 from .relations import Objective, Relation, relation_from_json
 from .spans import Narrative, Span
@@ -105,9 +106,9 @@ class Quantity:
     def from_json(cls, data: Mapping[str, object]) -> Quantity:
         span = data.get("span")
         return cls(
-            name=str(data["name"]),
-            role=Role(str(data["role"])),
-            dimension=Dimension.from_json(data["dimension"]),  # type: ignore[arg-type]
+            name=str(require(data, "name", "a quantity")),
+            role=Role(str(require(data, "role", "a quantity"))),
+            dimension=Dimension.from_json(require(data, "dimension", "a quantity")),  # type: ignore[arg-type]
             domain=Domain(str(data.get("domain", "real"))),
             lower=_opt_float(data.get("lower")),
             upper=_opt_float(data.get("upper")),
@@ -130,8 +131,8 @@ class Assumption:
     @classmethod
     def from_json(cls, data: Mapping[str, object]) -> Assumption:
         return cls(
-            statement=str(data["statement"]),
-            span=Span.from_json(data["span"]),  # type: ignore[arg-type]
+            statement=str(require(data, "statement", "an assumption")),
+            span=Span.from_json(require(data, "span", "an assumption")),  # type: ignore[arg-type]
         )
 
 
@@ -163,8 +164,8 @@ class OpenQuestion:
     @classmethod
     def from_json(cls, data: Mapping[str, object]) -> OpenQuestion:
         return cls(
-            question=str(data["question"]),
-            span=Span.from_json(data["span"]),  # type: ignore[arg-type]
+            question=str(require(data, "question", "an open question")),
+            span=Span.from_json(require(data, "span", "an open question")),  # type: ignore[arg-type]
             resolution=str(data.get("resolution", "")),
             affects=tuple(str(a) for a in data.get("affects", ())),  # type: ignore[union-attr]
         )
@@ -265,8 +266,8 @@ class Problem:
                 "refusing to guess at a different shape"
             )
         return cls(
-            narrative=Narrative.from_json(data["narrative"]),  # type: ignore[arg-type]
-            family=Family(str(data["family"])),
+            narrative=Narrative.from_json(require(data, "narrative", "a problem")),  # type: ignore[arg-type]
+            family=Family(str(require(data, "family", "a problem"))),
             quantities=tuple(Quantity.from_json(q) for q in data.get("quantities", ())),  # type: ignore[union-attr]
             relations=tuple(relation_from_json(r) for r in data.get("relations", ())),  # type: ignore[union-attr]
             objectives=tuple(Objective.from_json(o) for o in data.get("objectives", ())),  # type: ignore[union-attr]

@@ -307,9 +307,9 @@ def expression_from_json(data: Mapping[str, object]) -> Expression:
     from .relations import relation_from_json  # local import, cyclic by nature
 
     return Conditional(
-        when=relation_from_json(data["when"]),  # type: ignore[arg-type]
-        then=expression_from_json(data["then"]),  # type: ignore[arg-type]
-        otherwise=expression_from_json(data["otherwise"]),  # type: ignore[arg-type]
+        when=relation_from_json(_require(data, "when", "if")),  # type: ignore[arg-type]
+        then=expression_from_json(_require(data, "then", "if")),  # type: ignore[arg-type]
+        otherwise=expression_from_json(_require(data, "otherwise", "if")),  # type: ignore[arg-type]
     )
 
 

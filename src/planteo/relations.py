@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
+from ._fields import require
 from .dimensions import Dimension, DimensionError
 from .expressions import Expression, expression_from_json
 from .spans import Span
@@ -205,8 +206,8 @@ class Objective:
     def from_json(cls, data: Mapping[str, object]) -> Objective:
         span = data.get("span")
         return cls(
-            sense=Sense(str(data["sense"])),
-            expression=expression_from_json(data["expression"]),  # type: ignore[arg-type]
+            sense=Sense(str(require(data, "sense", "an objective"))),
+            expression=expression_from_json(require(data, "expression", "an objective")),  # type: ignore[arg-type]
             name=str(data.get("name", "objective")),
             span=Span.from_json(span) if isinstance(span, Mapping) else None,
         )
