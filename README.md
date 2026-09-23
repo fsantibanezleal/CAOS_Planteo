@@ -136,7 +136,8 @@ element it is about.
 
 - Not a translator. Producing a `Problem` from text is the job of a harness; this defines the target.
 - Not a solver or a solver wrapper.
-- Not a modelling language. It emits to Pyomo and MiniZinc rather than competing with them.
+- Not a modelling language. It emits to Pyomo rather than competing with it. A MiniZinc emitter is
+  designed and not built; this release emits Pyomo only.
 - Not an equivalence oracle. See the verdict vocabulary above.
 
 ## Documentation
