@@ -121,13 +121,53 @@ There is deliberately no `DIFFERENT` verdict. Equal canonical form proves equiva
 canonical form proves nothing, and a vocabulary that pretended otherwise would produce confident
 false negatives.
 
+## Dynamics
+
+A dynamics problem is a system of first-order ODEs read from a statement: states with initial
+values, one independent variable with the range to simulate, a rate per state, and the queries the
+statement asks.
+
+```python
+from fractions import Fraction
+from planteo import Constant, Dimension, Family, Narrative, Power, Problem, Product, Quantity, Query
+from planteo import Rate, Ref, Role, Sum, system
+
+KG, LITRE, MINUTE = Dimension.of("kg", mass=1), Dimension.of("L", length=3), Dimension.of("min", time=1)
+tank = Problem(
+    narrative=Narrative("A tank holds 100 L of brine with 2 kg of salt. Brine at 0.4 kg/L flows in "
+                        "at 5 L/min and drains at the same rate. How much salt after 20 minutes?"),
+    family=Family.DYNAMICS,
+    quantities=(
+        Quantity("t", Role.INDEPENDENT, MINUTE, lower=0.0, upper=30.0),
+        Quantity("x", Role.STATE, KG, value=2.0),                       # value = initial value
+        Quantity("V", Role.PARAMETER, LITRE, value=100.0),
+        Quantity("c_in", Role.PARAMETER, Dimension.of("kg/L", mass=1, length=-3), value=0.4),
+        Quantity("q", Role.PARAMETER, Dimension.of("L/min", length=3, time=-1), value=5.0),
+    ),
+    relations=(Rate("x", "t", Sum((
+        Product((Ref("c_in"), Ref("q"))),
+        Product((Constant(-1.0, Dimension.dimensionless()), Ref("x"), Power(Ref("V"), Fraction(-1)), Ref("q"))),
+    ))),),
+    queries=(Query(Ref("x"), 20.0, name="salt_after_20_min"),),
+)
+built = system(tank)       # states, y0, t_span, rhs(t, y), one function per query
+```
+
+`system` needs nothing numerical; integrate it with any ODE solver, for example
+`scipy.integrate.solve_ivp(built.rhs, built.t_span, built.y0)`. `planteo.emit.scipy.emit_source`
+writes the same system as a readable Python module. The rate's dimension is checked against the
+independent variable: a rate in kilograms where kilograms per minute are due is rejected, which is
+the unit-conversion trap in its dynamics form.
+
 ## What it validates
 
 1. **Dimensions.** Every relation is checked term by term; both sides of a comparator must agree.
 2. **Closure.** No free symbol.
 3. **Determinacy.** Every quantity is given, chosen, derived by exactly one relation, or observed.
 4. **Span integrity.** Every span still covers the text it recorded.
-5. **Family completeness.** The family's required structure is present.
+5. **Family completeness.** The family's required structure is present: an objective or a
+   feasibility declaration for optimization; for dynamics, one bounded independent variable, a rate
+   and an initial value for every state, and queries inside the range. The families do not mix.
 
 The validator reports every finding rather than stopping at the first, and each finding names the
 element it is about.
@@ -136,8 +176,8 @@ element it is about.
 
 - Not a translator. Producing a `Problem` from text is the job of a harness; this defines the target.
 - Not a solver or a solver wrapper.
-- Not a modelling language. It emits to Pyomo rather than competing with it. A MiniZinc emitter is
-  designed and not built; this release emits Pyomo only.
+- Not a modelling language. It emits to Pyomo for optimization and to a SciPy module for dynamics,
+  rather than competing with either. A MiniZinc emitter is designed and not built.
 - Not an equivalence oracle. See the verdict vocabulary above.
 
 ## Documentation
