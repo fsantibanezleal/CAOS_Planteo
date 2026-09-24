@@ -147,3 +147,28 @@ def test_nested_sums_flatten(blend) -> None:
         ),
     )
     assert compare(blend, nested).equivalent
+
+
+def test_nested_products_flatten(blend) -> None:
+    """R-012: how a product is parenthesised is not content. A cost written c_a * (x_a) inside a
+    product of one, or a rate written -(k * m) against -1 * k * m, is the same expression."""
+    (objective,) = blend.objectives
+    nested_terms = tuple(
+        Product((Product((term.factors[0],)), Product(term.factors[1:]))) if isinstance(term, Product) else term
+        for term in objective.expression.terms
+    )
+    nested = dataclasses.replace(
+        blend, objectives=(dataclasses.replace(objective, expression=Sum(nested_terms)),)
+    )
+    assert compare(blend, nested).equivalent
+
+    one = Dimension.dimensionless()
+    flat = Product((Constant(-1.0, one), Ref("k"), Ref("m")))
+    grouped = Product((Constant(-1.0, one), Product((Ref("k"), Ref("m")))))
+    rename = {"k": "q0", "m": "q1"}
+    from planteo.canonical import _canonical_expression
+
+    assert _canonical_expression(flat, rename) == _canonical_expression(grouped, rename)
+    # A different product is still a different form: flattening folds grouping, not content.
+    other = Product((Constant(-2.0, one), Product((Ref("k"), Ref("m")))))
+    assert _canonical_expression(flat, rename) != _canonical_expression(other, rename)

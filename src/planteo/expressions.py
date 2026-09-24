@@ -322,3 +322,15 @@ def flatten_terms(sequence: Sequence[Expression]) -> tuple[Expression, ...]:
         else:
             out.append(item)
     return tuple(out)
+
+
+def flatten_factors(sequence: Sequence[Expression]) -> tuple[Expression, ...]:
+    """Fold nested products into one level, used by canonical form. A product is associative, so
+    ``-(k * m)`` written as ``-1 * (k * m)`` and ``-1 * k * m`` are one expression."""
+    out: list[Expression] = []
+    for item in sequence:
+        if isinstance(item, Product):
+            out.extend(flatten_factors(item.factors))
+        else:
+            out.append(item)
+    return tuple(out)

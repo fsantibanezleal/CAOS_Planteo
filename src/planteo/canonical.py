@@ -31,6 +31,7 @@ from .expressions import (
     Product,
     Ref,
     Sum,
+    flatten_factors,
     flatten_terms,
 )
 from .problem import Problem, Quantity
@@ -237,7 +238,7 @@ def _canonical_expression(expression: Expression, renaming: dict[str, str]) -> d
         terms.sort(key=lambda item: json.dumps(item, sort_keys=True))
         return {"tag": "sum", "terms": terms}
     if isinstance(expression, Product):
-        factors = [_canonical_expression(f, renaming) for f in expression.factors]
+        factors = [_canonical_expression(f, renaming) for f in flatten_factors(expression.factors)]
         factors.sort(key=lambda item: json.dumps(item, sort_keys=True))
         return {"tag": "product", "factors": factors}
     if isinstance(expression, Power):

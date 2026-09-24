@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions are `X.XX.XXX` in this file, the
 git tag and any interface string, and the semver form with zeros dropped in `pyproject.toml`.
 
+## [0.02.001] - 2026-09-24
+
+### Fixed
+
+- **The canonical form folds nested products (R-012),** as it already folded nested sums. A rate
+  written `-1 * (k * m)` and one written `-1 * k * m` compared as different forms, so a candidate that
+  grouped a product differently from its reference could never be found equivalent. Found on the
+  first model run of Enunciado's dynamics corpus. The change can only turn a not-proven-equivalent
+  into an equivalent.
+
 ## [0.02.000] - 2026-09-24
 
 ### Added
