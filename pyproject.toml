@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planteo"
-version = "0.1.2"
+version = "0.2.0"
 description = "A typed representation for a problem after it has been read and before it is solved: dimensions on every quantity, provenance on every element, and a record of what the narrative left open."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -34,7 +34,7 @@ dependencies = []
 
 [project.optional-dependencies]
 pyomo = ["pyomo>=6.7"]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "ruff>=0.6", "scipy>=1.11"]
 
 [project.urls]
 Homepage = "https://github.com/fsantibanezleal/CAOS_Planteo"
