@@ -42,3 +42,16 @@ jobs:
 
       - name: The SDD gate, every requirement names its verification
         run: python scripts/check_sdd.py
+
+      - name: VERSION, the manifest and __version__ agree
+        # copela's 0.04.001 release was cut with VERSION one step behind the manifest, and only the
+        # publish workflow noticed, on the release tag. Checking on every trunk push fails the PR.
+        run: |
+          set -euo pipefail
+          file_version="$(tr -d ' \r\n' < VERSION)"
+          expected="$(python -c "print('.'.join(str(int(p)) for p in '${file_version}'.split('.')))")"
+          manifest="$(python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")"
+          package="$(python -c "import planteo;print(planteo.__version__)")"
+          echo "VERSION=${file_version} expected=${expected} pyproject=${manifest} __version__=${package}"
+          test "${manifest}" = "${expected}"
+          test "${package}" = "${expected}"

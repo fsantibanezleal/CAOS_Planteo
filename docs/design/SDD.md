@@ -85,6 +85,8 @@ Each family adds its own required structure on top of the core, and nothing else
 
 - **optimization**: at least one objective, or an explicit feasibility declaration.
 - **dynamics**: a state vector, an independent variable, and a relation per state component.
+  Built in 0.02.000 as the roles `state` and `independent`, the `rate` relation and `queries`; see
+  [`features/dynamics/`](features/dynamics/requirements.md).
 - **experiment**: factors, levels, blocking structure, randomisation unit, response, analysis model.
 - **learning**: target, feature availability time, split policy, metric, baseline.
 
@@ -191,9 +193,17 @@ Recorded for 0.01.000, on 2026-09-22:
 | The SDD gate itself | `scripts/check_sdd.py` | passes, and catches all four negative controls: a gate naming a missing test, a gate naming a missing file, a requirement with no gate, and a human gate instead of a mechanical one |
 | R-007 specifically | HiGHS through Pyomo | solved, objective 900.0 against the analytic optimum, not skipped |
 
+Recorded for 0.02.000, on 2026-09-24, for the dynamics family
+([`features/dynamics/requirements.md`](features/dynamics/requirements.md)):
+
+| Requirement | Gate | Result |
+|---|---|---|
+| R-101 to R-110 | `tests/test_dynamics.py` | all pass, 75 tests in the package, no skips; the mixing tank integrates to 40 - 38/e within 1e-7 through both the evaluator and the emitted source |
+| R-102, mutation | the rate's dimension check removed | its gate fails, and passes when restored |
+
 Unmet: nothing in this release's scope. Out of scope and therefore not claimed: the MiniZinc and
-OR-Tools emitters, and the dynamics, experiment and learning families. Those have no requirements in
-this document and no gates, which is the honest state, rather than requirements marked pending.
+OR-Tools emitters, and the experiment and learning families. Those have no requirements and no gates,
+rather than requirements marked pending.
 
 ## 11. Risks and kill criteria
 

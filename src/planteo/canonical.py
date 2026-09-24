@@ -34,7 +34,7 @@ from .expressions import (
     flatten_terms,
 )
 from .problem import Problem, Quantity
-from .relations import Compare, ForAll, Logical, Objective, Relation
+from .relations import Compare, ForAll, Logical, Objective, Rate, Relation
 
 
 class Verdict(str, Enum):
@@ -73,13 +73,24 @@ def canonical_form(problem: Problem) -> dict[str, Any]:
         (_canonical_objective(o, renaming) for o in problem.objectives),
         key=lambda item: json.dumps(item, sort_keys=True),
     )
-    return {
+    form = {
         "family": problem.family.value,
         "feasibility_only": problem.feasibility_only,
         "quantities": quantities,
         "relations": relations,
         "objectives": objectives,
     }
+    # Only a problem with queries gains the key, so every form computed before the dynamics family
+    # existed is unchanged.
+    if problem.queries:
+        form["queries"] = sorted(
+            (
+                {"expression": _canonical_expression(q.expression, renaming), "at": q.at}
+                for q in problem.queries
+            ),
+            key=lambda item: json.dumps(item, sort_keys=True),
+        )
+    return form
 
 
 def digest(problem: Problem) -> str:
@@ -117,6 +128,9 @@ def _canonical_names(problem: Problem) -> dict[str, str]:
             usage[name] = usage.get(name, 0) + 1
     for objective in problem.objectives:
         for name in objective.references():
+            usage[name] = usage.get(name, 0) + 1
+    for query in problem.queries:
+        for name in query.references():
             usage[name] = usage.get(name, 0) + 1
 
     def key(quantity: Quantity) -> tuple:
@@ -189,6 +203,13 @@ def _canonical_relation(relation: Relation, renaming: dict[str, str]) -> dict[st
             "tag": "forall",
             "index_set": renaming.get(relation.index_set, relation.index_set),
             "body": _canonical_relation(relation.body, inner),
+        }
+    if isinstance(relation, Rate):
+        return {
+            "tag": "rate",
+            "state": renaming.get(relation.state, relation.state),
+            "wrt": renaming.get(relation.wrt, relation.wrt),
+            "expression": _canonical_expression(relation.expression, renaming),
         }
     raise ValueError(f"cannot canonicalise relation node {relation.tag!r}")
 
