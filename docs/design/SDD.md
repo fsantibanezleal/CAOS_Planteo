@@ -173,12 +173,23 @@ R-010  THE JSON schema version SHALL be present in every serialised document.
 R-011  IF a document lacks a required field, THEN THE parser SHALL raise a message naming the element
        that lacks it, the field, and the keys it had, and SHALL NOT raise a bare KeyError.
        Gate: tests/test_schema.py::test_a_missing_field_names_its_element_and_the_field
+
+R-012  THE canonical form SHALL be unchanged by how a sum or a product is parenthesised.
+       Gate: tests/test_canonical.py::test_nested_products_flatten
 ```
 
 R-011 came from reading run ledgers. Expression nodes and relations already said what they lacked,
 but a quantity, an assumption, an open question, a span, an objective and the problem itself read
 their fields with a bare index, and four records in Enunciado's ledgers carried the string `'span'`
 as their whole diagnosis.
+
+R-012 came from the first model run on Enunciado's dynamics corpus. DeepSeek-V4-Pro's formalization
+of a first-order decay was the reference with one state renamed, and the canonical forms differed:
+the reference wrote the rate as `-1 * (k * m)` and the model as `-1 * k * A`. Nested sums were
+already folded; nested products were not, so no candidate that grouped a product differently from
+the reference could ever be found equivalent. Every verdict recorded before this release was reached
+on the unfolded form and stays as recorded; the change can only turn a not-proven-equivalent into an
+equivalent, never the reverse.
 
 ## 10. Convergence
 
@@ -190,6 +201,7 @@ Recorded for 0.01.000, on 2026-09-22:
 | Requirement | Gate | Result |
 |---|---|---|
 | R-001 to R-011 | as named above | all pass, 65 tests, no skips (0.01.002) |
+| R-012 | `tests/test_canonical.py::test_nested_products_flatten` | passes; fails with the fold removed (0.02.001) |
 | The SDD gate itself | `scripts/check_sdd.py` | passes, and catches all four negative controls: a gate naming a missing test, a gate naming a missing file, a requirement with no gate, and a human gate instead of a mechanical one |
 | R-007 specifically | HiGHS through Pyomo | solved, objective 900.0 against the analytic optimum, not skipped |
 
