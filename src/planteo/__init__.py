@@ -76,9 +76,9 @@ from .relations import (
 from .spans import Narrative, Span, SpanError
 from .validate import Finding, Report, Severity, ValidationError, validate
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 #: The padded display form used in the CHANGELOG, the tag and any UI string.
-__display_version__ = "0.02.000"
+__display_version__ = "0.02.001"
 
 __all__ = [
     "__display_version__",
