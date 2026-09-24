@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planteo"
-version = "0.2.0"
+version = "0.2.1"
 description = "A typed representation for a problem after it has been read and before it is solved: dimensions on every quantity, provenance on every element, and a record of what the narrative left open."
 readme = "README.md"
 requires-python = ">=3.11"
