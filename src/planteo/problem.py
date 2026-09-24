@@ -20,10 +20,14 @@ from enum import Enum
 
 from ._fields import require
 from .dimensions import Dimension
+from .expressions import Expression, expression_from_json
 from .relations import Objective, Relation, relation_from_json
 from .spans import Narrative, Span
 
-SCHEMA_VERSION = "1.0"
+#: 1.1 adds the dynamics family: the roles ``state`` and ``independent``, the ``rate`` relation and
+#: ``queries``. A 1.0 document has none of them and loads unchanged.
+SCHEMA_VERSION = "1.1"
+READABLE_VERSIONS = frozenset({"1.0", "1.1"})
 
 
 class Family(str, Enum):
@@ -48,6 +52,12 @@ class Role(str, Enum):
     OBSERVED = "observed"
     #: An index set, used by BigSum and ForAll.
     SET = "set"
+    #: A quantity that evolves along the independent variable (dynamics); its value is its initial
+    #: value at the start of the range.
+    STATE = "state"
+    #: The variable the states evolve along, usually time (dynamics); its bounds are the simulated
+    #: range.
+    INDEPENDENT = "independent"
 
 
 class Domain(str, Enum):
@@ -114,6 +124,42 @@ class Quantity:
             upper=_opt_float(data.get("upper")),
             value=_opt_float(data.get("value")),
             description=str(data.get("description", "")),
+            span=Span.from_json(span) if isinstance(span, Mapping) else None,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class Query:
+    """What a dynamics statement asks: ``expression`` at ``at``, a value of the independent variable.
+
+    The analogue of an objective. "The concentration after 20 minutes" is a query of the
+    concentration at 20, in the independent variable's own units.
+    """
+
+    expression: Expression
+    at: float
+    name: str = "query"
+    span: Span | None = None
+
+    def dimension(self, scope: Mapping[str, Dimension]) -> Dimension:
+        return self.expression.dimension(scope)
+
+    def references(self) -> set[str]:
+        return self.expression.references()
+
+    def to_json(self) -> dict[str, object]:
+        out: dict[str, object] = {"name": self.name, "expression": self.expression.to_json(), "at": self.at}
+        if self.span is not None:
+            out["span"] = self.span.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, object]) -> Query:
+        span = data.get("span")
+        return cls(
+            expression=expression_from_json(require(data, "expression", "a query")),  # type: ignore[arg-type]
+            at=float(require(data, "at", "a query")),  # type: ignore[arg-type]
+            name=str(data.get("name", "query")),
             span=Span.from_json(span) if isinstance(span, Mapping) else None,
         )
 
@@ -212,6 +258,8 @@ class Problem:
     open_questions: tuple[OpenQuestion, ...] = ()
     metadata: Metadata = field(default_factory=Metadata)
     feasibility_only: bool = False
+    #: What a dynamics problem asks. Empty for every other family.
+    queries: tuple[Query, ...] = ()
 
     # -- lookups ---------------------------------------------------------------------
 
@@ -239,6 +287,8 @@ class Problem:
             names |= relation.references()
         for objective in self.objectives:
             names |= objective.references()
+        for query in self.queries:
+            names |= query.references()
         return names
 
     # -- serialisation ----------------------------------------------------------------
@@ -255,14 +305,15 @@ class Problem:
             "open_questions": [q.to_json() for q in self.open_questions],
             "metadata": self.metadata.to_json(),
             "feasibility_only": self.feasibility_only,
+            "queries": [q.to_json() for q in self.queries],
         }
 
     @classmethod
     def from_json(cls, data: Mapping[str, object]) -> Problem:
         version = str(data.get("schema_version", ""))
-        if version != SCHEMA_VERSION:
+        if version not in READABLE_VERSIONS:
             raise ValueError(
-                f"document schema version {version!r} is not {SCHEMA_VERSION!r}; "
+                f"document schema version {version!r} is not one of {sorted(READABLE_VERSIONS)}; "
                 "refusing to guess at a different shape"
             )
         return cls(
@@ -277,6 +328,7 @@ class Problem:
             ),
             metadata=Metadata.from_json(data.get("metadata", {})),  # type: ignore[arg-type]
             feasibility_only=bool(data.get("feasibility_only", False)),
+            queries=tuple(Query.from_json(q) for q in data.get("queries", ())),  # type: ignore[union-attr]
         )
 
 
