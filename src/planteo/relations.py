@@ -95,6 +95,53 @@ class Compare(Relation):
 
 
 @dataclass(frozen=True, slots=True)
+class Rate(Relation):
+    """``d(state)/d(wrt) = expression``: one state's rate of change, for the dynamics family.
+
+    The relation names the independent variable it differentiates by, so its dimensional check needs
+    nothing but the scope: the expression must have the state's dimension over the independent
+    variable's. A rate in litres per minute written for a state measured against hours passes every
+    other check, and fails this one only because the independent variable is named.
+    """
+
+    state: str
+    wrt: str
+    expression: Expression
+    name: str = ""
+    span: Span | None = None
+
+    tag = "rate"
+
+    def check_dimensions(self, scope: Mapping[str, Dimension]) -> None:
+        label = self.name or f"rate of {self.state}"
+        for needed in (self.state, self.wrt):
+            if needed not in scope:
+                raise DimensionError(f"{label}: reference to undeclared quantity {needed!r}")
+        got = self.expression.dimension(scope)
+        expected = scope[self.state] / scope[self.wrt]
+        if not expected.compatible_with(got):
+            raise DimensionError(
+                f"{label}: the expression is {got.describe()} but d({self.state})/d({self.wrt}) "
+                f"is {expected.describe()}"
+            )
+
+    def references(self) -> set[str]:
+        return {self.state, self.wrt} | self.expression.references()
+
+    def to_json(self) -> dict[str, object]:
+        out: dict[str, object] = {
+            "tag": self.tag,
+            "state": self.state,
+            "wrt": self.wrt,
+            "expression": self.expression.to_json(),
+            "name": self.name,
+        }
+        if self.span is not None:
+            out["span"] = self.span.to_json()
+        return out
+
+
+@dataclass(frozen=True, slots=True)
 class Logical(Relation):
     """``and`` / ``or`` / ``not`` / ``implies`` over relations."""
 
@@ -250,7 +297,15 @@ def relation_from_json(data: Mapping[str, object]) -> Relation:
             name=name,
             span=span,
         )
-    known = "compare, logical, forall"
+    if tag == "rate":
+        return Rate(
+            state=str(_require(data, "state", tag)),
+            wrt=str(_require(data, "wrt", tag)),
+            expression=expression_from_json(_require(data, "expression", tag)),  # type: ignore[arg-type]
+            name=name,
+            span=span,
+        )
+    known = "compare, logical, forall, rate"
     raise ValueError(
         f"unknown relation node {tag!r}; the node set is closed. Known nodes: {known}"
     )

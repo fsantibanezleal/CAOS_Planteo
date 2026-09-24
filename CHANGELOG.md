@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions are `X.XX.XXX` in this file, the
 git tag and any interface string, and the semver form with zeros dropped in `pyproject.toml`.
 
+## [0.02.000] - 2026-09-24
+
+### Added
+
+- **The dynamics family** (R-101 to R-110, `docs/design/features/dynamics/`):
+  - the roles `state`, whose value is its initial value, and `independent`, whose bounds are the
+    range to simulate;
+  - the `rate` relation, `d(state)/d(wrt) = expression`, with a dimensional check against the
+    independent variable;
+  - `Problem.queries`, what a dynamics statement asks, the analogue of an objective.
+- Validation for the family: one bounded independent variable, a rate and an initial value per state,
+  queries in range. The families do not mix: a rate or a query in an optimization problem, or an
+  objective, a decision variable or an inequality in a dynamics problem, is rejected.
+- Canonical form for rates and queries. The form of a problem without queries is unchanged.
+- `planteo.evaluate` and `planteo.holds`: numbers from the closed node set, with the indexed sum
+  refused by name.
+- `planteo.system`: a dynamics problem as states, initial values, range, a right-hand side and one
+  function per query, for any ODE integrator. Pure Python.
+- `planteo.emit.scipy.emit_source`: the same system as a readable Python module for `solve_ivp`, held
+  to the evaluator's numbers by a test.
+
+### Changed
+
+- Documents are written at schema 1.1. A 1.0 document loads unchanged.
+
 ## [0.01.002] - 2026-09-23
 
 ### Fixed

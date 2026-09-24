@@ -36,7 +36,9 @@ from .dimensions import (
     Dimension,
     DimensionError,
 )
+from .dynamics import System, system
 from .emit import NotRepresentable
+from .evaluate import NotEvaluable, evaluate, holds
 from .expressions import (
     BigSum,
     Conditional,
@@ -57,6 +59,7 @@ from .problem import (
     OpenQuestion,
     Problem,
     Quantity,
+    Query,
     Role,
 )
 from .relations import (
@@ -65,6 +68,7 @@ from .relations import (
     ForAll,
     Logical,
     Objective,
+    Rate,
     Relation,
     Sense,
     relation_from_json,
@@ -72,36 +76,45 @@ from .relations import (
 from .spans import Narrative, Span, SpanError
 from .validate import Finding, Report, Severity, ValidationError, validate
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 #: The padded display form used in the CHANGELOG, the tag and any UI string.
-__display_version__ = "0.01.002"
+__display_version__ = "0.02.000"
 
 __all__ = [
-    "AXES",
+    "__display_version__",
+    "__version__",
     "Assumption",
+    "AXES",
     "BigSum",
-    "COUNT",
-    "CURRENCY",
+    "canonical_form",
     "Comparator",
-    "Comparison",
     "Compare",
+    "compare",
+    "Comparison",
     "Conditional",
     "Constant",
-    "DIMENSIONLESS",
+    "COUNT",
+    "CURRENCY",
+    "digest",
     "Dimension",
     "DimensionError",
+    "DIMENSIONLESS",
     "Domain",
     "ENERGY",
+    "evaluate",
     "Expression",
+    "expression_from_json",
     "Family",
     "Finding",
     "ForAll",
+    "holds",
     "LENGTH",
     "Logical",
     "MASS",
     "MASS_RATE",
     "Metadata",
     "Narrative",
+    "NotEvaluable",
     "NotRepresentable",
     "Objective",
     "OpenQuestion",
@@ -110,8 +123,11 @@ __all__ = [
     "Problem",
     "Product",
     "Quantity",
+    "Query",
+    "Rate",
     "Ref",
     "Relation",
+    "relation_from_json",
     "Report",
     "Role",
     "SCHEMA_VERSION",
@@ -120,15 +136,10 @@ __all__ = [
     "Span",
     "SpanError",
     "Sum",
+    "System",
+    "system",
     "TIME",
+    "validate",
     "ValidationError",
     "Verdict",
-    "__display_version__",
-    "__version__",
-    "canonical_form",
-    "compare",
-    "digest",
-    "expression_from_json",
-    "relation_from_json",
-    "validate",
 ]
